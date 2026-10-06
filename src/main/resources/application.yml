@@ -1,0 +1,27 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: campusnest
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/campusnest}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+
+# Seguridad (semana 6): la clave real va en variable de entorno, NO en GitHub.
+jwt:
+  secret: ${JWT_SECRET:clave-solo-para-desarrollo-campusnest-256-bits-minimo!!}
+  expiration-ms: 86400000   # 24 h
+
+# US 09: dominios de correo universitario aceptados (editar según el equipo).
+app:
+  institutional-domains: upc.edu.pe,pucp.edu.pe,uni.pe,unmsm.edu.pe,ulima.edu.pe,up.edu.pe,usil.edu.pe,usmp.pe,utp.edu.pe
