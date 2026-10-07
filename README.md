@@ -1,7 +1,6 @@
 # CampusNest — Web Services (Backend)
 
-Backend REST de **CampusNest** (UniLiving Studios). Curso 1ACC0236 Ingeniería de Software, UPC.
-Stack visto en clase: **Java 21 · Spring Boot · Spring Data JPA · PostgreSQL · Spring Security + JWT · MapStruct · Lombok · Postman**.
+**CampusNest** es una plataforma web orientada a la comunidad universitaria de Lima Metropolitana que agiliza la publicación granular de habitaciones, optimiza el emparejamiento por compatibilidad de convivencia y estructure la coordinación de visitas para el arrendamiento compartido.
 
 ## Arquitectura en capas
 `controller` (recibe HTTP y valida) → `service` (lógica de negocio) → `repository` (acceso a BD) → `model` (entidades JPA).
