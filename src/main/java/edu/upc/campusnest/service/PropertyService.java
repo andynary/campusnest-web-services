@@ -2,6 +2,7 @@ package edu.upc.campusnest.service;
 
 import edu.upc.campusnest.dto.request.PropertyRequest;
 import edu.upc.campusnest.dto.request.RoomRequest;
+import edu.upc.campusnest.dto.request.RoomServicesRequest;
 import edu.upc.campusnest.dto.request.RoomStatusRequest;
 import edu.upc.campusnest.dto.response.PropertyResponse;
 import edu.upc.campusnest.dto.response.RoomResponse;
@@ -15,6 +16,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 
 /** US 03: propiedades y habitaciones independientes (logica de negocio). */
@@ -25,6 +27,7 @@ public class PropertyService {
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
     private final DistrictRepository districtRepository;
+    private final IncludedServiceRepository serviceRepository;
     private final PropertyMapper propertyMapper;
     private final RoomMapper roomMapper;
 
@@ -65,6 +68,22 @@ public class PropertyService {
             throw new AccessDeniedException("La habitacion no te pertenece");   // 403
         }
         room.setStatus(req.status());
+        return roomMapper.toResponse(roomRepository.save(room));
+    }
+
+    /** US 10: reemplaza los servicios incluidos de una habitacion (solo el duenio). */
+    @Transactional
+    public RoomResponse updateRoomServices(String ownerEmail, Long roomId, RoomServicesRequest req) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new ResourceNotFoundException("Habitacion no encontrada"));
+        if (!room.getProperty().getOwner().getEmail().equals(ownerEmail)) {
+            throw new AccessDeniedException("La habitacion no te pertenece");   // 403
+        }
+        List<IncludedService> found = serviceRepository.findAllById(req.serviceIds());
+        if (found.size() != new HashSet<>(req.serviceIds()).size()) {
+            throw new ResourceNotFoundException("Alguno de los servicios no existe en el catalogo");
+        }
+        room.setServices(new HashSet<>(found));
         return roomMapper.toResponse(roomRepository.save(room));
     }
 

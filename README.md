@@ -7,38 +7,40 @@
 `dto/request` y `dto/response` controlan lo que entra y sale de la API; `mapper` (MapStruct) convierte entidad ⇄ DTO;
 `exception` centraliza errores (400/404/409/401); `security` y `config` contienen JWT y la configuración de Spring Security.
 
-## 🛠️ Tecnologías Utilizadas
+## Cómo ejecutarlo en local
+1. Instalar Java 21 y PostgreSQL. Crear la base de datos: `CREATE DATABASE campusnest;`
+2. (Opcional) variables de entorno: `DB_URL`, `DB_USER`, `DB_PASSWORD`, `JWT_SECRET` (mínimo 32 caracteres).
+   Por defecto usa `localhost:5432/campusnest`, usuario/clave `postgres`.
+3. Ejecutar `CampusNestApplication` desde IntelliJ (o `mvn spring-boot:run`). Puerto **8081**.
+4. Las tablas se crean solas (`ddl-auto: update`) y los distritos se cargan al iniciar.
 
-* **Lenguaje:** Java 17+
-* **Framework Backend:** Spring Boot 3.x
-* **Seguridad:** Spring Security + JWT (JSON Web Tokens) + BCrypt
-* **Persistencia de Datos:** Spring Data JPA / Hibernate
-* **Base de Datos:** PostgreSQL 16
-* **Documentación / Pruebas:** Postman Collection
+## Endpoints implementados (Sprint 1)
+| US | Método y ruta | Rol | Respuestas |
+|----|---------------|-----|------------|
+| 09 | `POST /api/auth/register` | público | 201 / 400 / 409 |
+| 09 | `POST /api/auth/login` | público | 200 / 400 / 401 |
+| 03 | `POST /api/properties` | HOST | 201 / 400 / 401 / 403 |
+| 03 | `GET /api/properties/mine` | HOST | 200 |
+| 03 | `POST /api/properties/{id}/rooms` | HOST (dueño) | 201 / 403 / 404 |
+| 03 | `PATCH /api/rooms/{id}/status` | HOST (dueño) | 200 / 403 / 404 |
+| 10 | `GET /api/services` | autenticado | 200 |
+| 10 | `PUT /api/rooms/{id}/services` | HOST (dueño) | 200 / 403 / 404 |
+| 01 | `GET /api/rooms/search?district=&maxPrice=&cleanlinessLevel=&noiseLevel=` | autenticado | 200 / 400 |
+| 07 | `POST /api/rooms/{roomId}/applications` | SEEKER | 201 / 403 / 404 / 409 |
+| 07 | `GET /api/rooms/{roomId}/applications` (panel comparativo) | HOST (dueño) | 200 / 403 / 404 |
+| 07 | `PATCH /api/applications/{id}/status` (ACCEPTED / REJECTED) | HOST (dueño) | 200 / 400 / 403 / 409 |
+| 11 | `POST /api/rooms/{roomId}/visits` | SEEKER | 201 / 400 / 409 |
+| 11 | `GET /api/rooms/{roomId}/visits` | HOST (dueño) | 200 / 403 |
+| 11 | `PATCH /api/visits/{id}/status` (APPROVED / REJECTED) | HOST (dueño) | 200 / 400 / 403 / 409 |
 
----
+La identidad del postulante o visitante se toma **del token JWT**, no de la URL.
 
-## 🚀 Funcionalidades Implementadas (Sprint 1)
+## Flujo de trabajo en Git (GitFlow)
+- Ramas permanentes: `main` (estable) y `develop` (integración).
+- Una rama por User Story: `feature/us-03-gestion-habitaciones`, creada desde `develop`.
+- Se integra con **Pull Request** hacia `develop`, revisado por otro integrante.
+- Versionado SemVer con tags: `v0.1.0` al cerrar el Sprint 1.
+- Commits (Conventional Commits): `feat(rooms): add endpoint to change room status`, `fix(auth): ...`, `docs: ...`, `test: ...`, `chore: ...`.
 
-* **US 09 - Autenticación y Seguridad:** Registro e inicio de sesión con roles (`SEEKER`, `HOST`, `ADMIN`), encriptación de contraseñas con BCrypt y verificación de correo universitario (`.edu.pe`).
-* **US 03 - Gestión Granular de Inmuebles y Habitaciones:** Creación de propiedades matrices y administración independiente de múltiples habitaciones (definición de tarifas, amoblado y estados como `AVAILABLE` o `HIDDEN`).
-* **US 01 - Búsqueda y Compatibilidad:** Búsqueda multicriterio por distrito/presupuesto y cálculo del porcentaje de compatibilidad de convivencia (nivel de limpieza y ruido).
-* **US 10 - Catálogo de Servicios Incluidos:** Registro y consulta de servicios fijos asociados a las habitaciones (agua, luz, internet).
-* **US 07 - Gestión de Postulaciones:** Flujo de postulaciones de estudiantes hacia habitaciones y evaluación comparativa por parte del anfitrión (`PENDING`, `ACCEPTED`, `DISCARDED`).
-* **US 11 - Solicitud y Confirmación de Visitas:** Agendamiento de citas presenciales/virtuales con validación de estados (`PROPOSED`, `APPROVED`, `REJECTED`).
-
----
-
-## 📂 Estructura del Proyecto
-
-```text
-src/main/java/edu/upc/campusnest/
-├── config/        # Configuraciones globales (Security, DataInitializer)
-├── controller/    # Controladores RESTful (Endpoints)
-├── dto/           # Data Transfer Objects (Request / Response)
-├── exception/     # Manejo global de excepciones
-├── mapper/        # Mapeadores de datos / conversiones
-├── model/         # Entidades JPA y Enums del Dominio
-├── repository/    # Interfases Spring Data JPA
-├── security/      # Filtros JWT y servicio de autenticación
-└── service/       # Lógica de negocio
+## Antes de la demo
+Ejecutar `sql/truncate.sql` para dejar las tablas vacías y reiniciar IDs, y seguir `docs/guia-pruebas-postman.md`.

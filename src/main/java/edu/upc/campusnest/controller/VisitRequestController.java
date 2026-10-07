@@ -1,54 +1,42 @@
 package edu.upc.campusnest.controller;
 
-import edu.upc.campusnest.model.VisitRequest;
-import edu.upc.campusnest.repository.RoomRepository;
-import edu.upc.campusnest.repository.UserRepository;
-import edu.upc.campusnest.repository.VisitRequestRepository;
+import edu.upc.campusnest.dto.request.VisitProposalRequest;
+import edu.upc.campusnest.dto.request.VisitStatusRequest;
+import edu.upc.campusnest.dto.response.VisitResponse;
+import edu.upc.campusnest.service.VisitService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
 import java.util.List;
 
+/** US 11: el SEEKER propone una visita; el HOST la aprueba o rechaza. */
 @RestController
-@RequestMapping("/api/visits")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class VisitRequestController {
+    private final VisitService visitService;
 
-    private final VisitRequestRepository visitRepository;
-    private final RoomRepository roomRepository;
-    private final UserRepository userRepository;
-
-    @GetMapping("/room/{roomId}")
-    public ResponseEntity<List<VisitRequest>> getVisitsByRoom(@PathVariable Long roomId) {
-        return ResponseEntity.ok(visitRepository.findByRoomId(roomId));
+    @PostMapping("/rooms/{roomId}/visits")
+    @PreAuthorize("hasRole('SEEKER')")
+    @ResponseStatus(HttpStatus.CREATED)
+    public VisitResponse propose(Authentication auth, @PathVariable Long roomId,
+                                 @Valid @RequestBody VisitProposalRequest req) {
+        return visitService.propose(auth.getName(), roomId, req.visitDateTime());
     }
 
-    @PostMapping("/room/{roomId}/visitor/{userId}")
-    public ResponseEntity<VisitRequest> requestVisit(
-            @PathVariable Long roomId,
-            @PathVariable Long userId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime visitDateTime
-    ) {
-        var room = roomRepository.findById(roomId).orElseThrow();
-        var visitor = userRepository.findById(userId).orElseThrow();
-
-        VisitRequest visit = VisitRequest.builder()
-                .room(room)
-                .visitor(visitor)
-                .visitDateTime(visitDateTime)
-                .status("PROPOSED")
-                .build();
-
-        return ResponseEntity.ok(visitRepository.save(visit));
+    @GetMapping("/rooms/{roomId}/visits")
+    @PreAuthorize("hasRole('HOST')")
+    public List<VisitResponse> listByRoom(Authentication auth, @PathVariable Long roomId) {
+        return visitService.listByRoom(auth.getName(), roomId);
     }
 
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<VisitRequest> updateStatus(@PathVariable Long id, @RequestParam String status) {
-        VisitRequest visit = visitRepository.findById(id).orElseThrow();
-        visit.setStatus(status.toUpperCase());
-        return ResponseEntity.ok(visitRepository.save(visit));
+    @PatchMapping("/visits/{id}/status")
+    @PreAuthorize("hasRole('HOST')")
+    public VisitResponse changeStatus(Authentication auth, @PathVariable Long id,
+                                      @Valid @RequestBody VisitStatusRequest req) {
+        return visitService.changeStatus(auth.getName(), id, req.status());
     }
 }
