@@ -1,38 +1,44 @@
 # CampusNest — Web Services (Backend)
 
-Backend REST de **CampusNest** (UniLiving Studios). Curso 1ACC0236 Ingeniería de Software, UPC.
-Stack visto en clase: **Java 21 · Spring Boot · Spring Data JPA · PostgreSQL · Spring Security + JWT · MapStruct · Lombok · Postman**.
+**CampusNest** es una plataforma web orientada a la comunidad universitaria de Lima Metropolitana que agiliza la publicación granular de habitaciones, optimiza el emparejamiento por compatibilidad de convivencia y estructure la coordinación de visitas para el arrendamiento compartido.
 
 ## Arquitectura en capas
 `controller` (recibe HTTP y valida) → `service` (lógica de negocio) → `repository` (acceso a BD) → `model` (entidades JPA).
 `dto/request` y `dto/response` controlan lo que entra y sale de la API; `mapper` (MapStruct) convierte entidad ⇄ DTO;
 `exception` centraliza errores (400/404/409/401); `security` y `config` contienen JWT y la configuración de Spring Security.
 
-## Cómo ejecutarlo en local
-1. Instalar Java 21 y PostgreSQL. Crear la base de datos: `CREATE DATABASE campusnest;`
-2. (Opcional) variables de entorno: `DB_URL`, `DB_USER`, `DB_PASSWORD`, `JWT_SECRET` (mínimo 32 caracteres).
-   Por defecto usa `localhost:5432/campusnest`, usuario/clave `postgres`.
-3. Ejecutar `CampusNestApplication` desde IntelliJ (o `mvn spring-boot:run`). Puerto **8081**.
-4. Las tablas se crean solas (`ddl-auto: update`) y los distritos se cargan al iniciar.
+## 🛠️ Tecnologías Utilizadas
 
-## Endpoints implementados (Sprint 1 — base)
-| US | Método y ruta | Rol | Respuestas |
-|----|---------------|-----|------------|
-| 09 | `POST /api/auth/register` | público | 201 / 400 / 409 |
-| 09 | `POST /api/auth/login` | público | 200 / 400 / 401 |
-| 03 | `POST /api/properties` | HOST | 201 / 400 / 401 / 403 |
-| 03 | `GET /api/properties/mine` | HOST | 200 |
-| 03 | `POST /api/properties/{id}/rooms` | HOST (dueño) | 201 / 403 / 404 |
-| 03 | `PATCH /api/rooms/{id}/status` | HOST (dueño) | 200 / 403 / 404 |
+* **Lenguaje:** Java 17+
+* **Framework Backend:** Spring Boot 3.x
+* **Seguridad:** Spring Security + JWT (JSON Web Tokens) + BCrypt
+* **Persistencia de Datos:** Spring Data JPA / Hibernate
+* **Base de Datos:** PostgreSQL 16
+* **Documentación / Pruebas:** Postman Collection
 
-Pendiente del Sprint 1: US 10 (servicios), US 01 (búsqueda y compatibilidad), US 07 (postulaciones), US 11 (visitas).
+---
 
-## Flujo de trabajo en Git (GitFlow)
-- Ramas permanentes: `main` (estable) y `develop` (integración).
-- Una rama por User Story: `feature/us-03-gestion-habitaciones`, creada desde `develop`.
-- Se integra con **Pull Request** hacia `develop`, revisado por otro integrante.
-- Versionado SemVer con tags: `v0.1.0` al cerrar el Sprint 1.
-- Commits (Conventional Commits): `feat(rooms): add endpoint to change room status`, `fix(auth): ...`, `docs: ...`, `test: ...`, `chore: ...`.
+## 🚀 Funcionalidades Implementadas (Sprint 1)
 
-## Antes de la demo
-Ejecutar `sql/truncate.sql` para dejar las tablas vacías y reiniciar IDs, y seguir `docs/guia-pruebas-postman.md`.
+* **US 09 - Autenticación y Seguridad:** Registro e inicio de sesión con roles (`SEEKER`, `HOST`, `ADMIN`), encriptación de contraseñas con BCrypt y verificación de correo universitario (`.edu.pe`).
+* **US 03 - Gestión Granular de Inmuebles y Habitaciones:** Creación de propiedades matrices y administración independiente de múltiples habitaciones (definición de tarifas, amoblado y estados como `AVAILABLE` o `HIDDEN`).
+* **US 01 - Búsqueda y Compatibilidad:** Búsqueda multicriterio por distrito/presupuesto y cálculo del porcentaje de compatibilidad de convivencia (nivel de limpieza y ruido).
+* **US 10 - Catálogo de Servicios Incluidos:** Registro y consulta de servicios fijos asociados a las habitaciones (agua, luz, internet).
+* **US 07 - Gestión de Postulaciones:** Flujo de postulaciones de estudiantes hacia habitaciones y evaluación comparativa por parte del anfitrión (`PENDING`, `ACCEPTED`, `DISCARDED`).
+* **US 11 - Solicitud y Confirmación de Visitas:** Agendamiento de citas presenciales/virtuales con validación de estados (`PROPOSED`, `APPROVED`, `REJECTED`).
+
+---
+
+## 📂 Estructura del Proyecto
+
+```text
+src/main/java/edu/upc/campusnest/
+├── config/        # Configuraciones globales (Security, DataInitializer)
+├── controller/    # Controladores RESTful (Endpoints)
+├── dto/           # Data Transfer Objects (Request / Response)
+├── exception/     # Manejo global de excepciones
+├── mapper/        # Mapeadores de datos / conversiones
+├── model/         # Entidades JPA y Enums del Dominio
+├── repository/    # Interfases Spring Data JPA
+├── security/      # Filtros JWT y servicio de autenticación
+└── service/       # Lógica de negocio
