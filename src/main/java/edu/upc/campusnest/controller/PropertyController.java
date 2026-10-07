@@ -2,6 +2,7 @@ package edu.upc.campusnest.controller;
 
 import edu.upc.campusnest.dto.request.PropertyRequest;
 import edu.upc.campusnest.dto.request.RoomRequest;
+import edu.upc.campusnest.dto.request.RoomServicesRequest;
 import edu.upc.campusnest.dto.request.RoomStatusRequest;
 import edu.upc.campusnest.dto.response.PropertyResponse;
 import edu.upc.campusnest.dto.response.RoomResponse;
@@ -44,5 +45,12 @@ public class PropertyController {
     public RoomResponse changeStatus(Authentication auth, @PathVariable Long roomId,
                                      @Valid @RequestBody RoomStatusRequest req) {
         return propertyService.changeRoomStatus(auth.getName(), roomId, req);
+    }
+
+    /** US 10: asocia servicios incluidos (agua, luz, internet...) a una habitacion. */
+    @PutMapping("/rooms/{roomId}/services")
+    public RoomResponse updateServices(Authentication auth, @PathVariable Long roomId,
+                                       @Valid @RequestBody RoomServicesRequest req) {
+        return propertyService.updateRoomServices(auth.getName(), roomId, req);
     }
 }

@@ -15,7 +15,7 @@ Stack visto en clase: **Java 21 · Spring Boot · Spring Data JPA · PostgreSQL 
 3. Ejecutar `CampusNestApplication` desde IntelliJ (o `mvn spring-boot:run`). Puerto **8081**.
 4. Las tablas se crean solas (`ddl-auto: update`) y los distritos se cargan al iniciar.
 
-## Endpoints implementados (Sprint 1 — base)
+## Endpoints implementados (Sprint 1)
 | US | Método y ruta | Rol | Respuestas |
 |----|---------------|-----|------------|
 | 09 | `POST /api/auth/register` | público | 201 / 400 / 409 |
@@ -24,8 +24,17 @@ Stack visto en clase: **Java 21 · Spring Boot · Spring Data JPA · PostgreSQL 
 | 03 | `GET /api/properties/mine` | HOST | 200 |
 | 03 | `POST /api/properties/{id}/rooms` | HOST (dueño) | 201 / 403 / 404 |
 | 03 | `PATCH /api/rooms/{id}/status` | HOST (dueño) | 200 / 403 / 404 |
+| 10 | `GET /api/services` | autenticado | 200 |
+| 10 | `PUT /api/rooms/{id}/services` | HOST (dueño) | 200 / 403 / 404 |
+| 01 | `GET /api/rooms/search?district=&maxPrice=&cleanlinessLevel=&noiseLevel=` | autenticado | 200 / 400 |
+| 07 | `POST /api/rooms/{roomId}/applications` | SEEKER | 201 / 403 / 404 / 409 |
+| 07 | `GET /api/rooms/{roomId}/applications` (panel comparativo) | HOST (dueño) | 200 / 403 / 404 |
+| 07 | `PATCH /api/applications/{id}/status` (ACCEPTED / REJECTED) | HOST (dueño) | 200 / 400 / 403 / 409 |
+| 11 | `POST /api/rooms/{roomId}/visits` | SEEKER | 201 / 400 / 409 |
+| 11 | `GET /api/rooms/{roomId}/visits` | HOST (dueño) | 200 / 403 |
+| 11 | `PATCH /api/visits/{id}/status` (APPROVED / REJECTED) | HOST (dueño) | 200 / 400 / 403 / 409 |
 
-Pendiente del Sprint 1: US 10 (servicios), US 01 (búsqueda y compatibilidad), US 07 (postulaciones), US 11 (visitas).
+La identidad del postulante o visitante se toma **del token JWT**, no de la URL.
 
 ## Flujo de trabajo en Git (GitFlow)
 - Ramas permanentes: `main` (estable) y `develop` (integración).

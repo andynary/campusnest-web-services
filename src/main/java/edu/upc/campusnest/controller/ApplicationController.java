@@ -1,49 +1,40 @@
 package edu.upc.campusnest.controller;
 
-import edu.upc.campusnest.model.Application;
-import edu.upc.campusnest.repository.ApplicationRepository;
-import edu.upc.campusnest.repository.RoomRepository;
-import edu.upc.campusnest.repository.UserRepository;
+import edu.upc.campusnest.dto.request.ApplicationStatusRequest;
+import edu.upc.campusnest.dto.response.ApplicationResponse;
+import edu.upc.campusnest.service.ApplicationService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
 import java.util.List;
 
+/** US 07: el SEEKER postula (identidad desde el token); el HOST compara y decide. */
 @RestController
-@RequestMapping("/api/applications")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class ApplicationController {
+    private final ApplicationService applicationService;
 
-    private final ApplicationRepository applicationRepository;
-    private final RoomRepository roomRepository;
-    private final UserRepository userRepository;
-
-    @GetMapping("/room/{roomId}")
-    public ResponseEntity<List<Application>> getApplicationsByRoom(@PathVariable Long roomId) {
-        return ResponseEntity.ok(applicationRepository.findByRoomId(roomId));
+    @PostMapping("/rooms/{roomId}/applications")
+    @PreAuthorize("hasRole('SEEKER')")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApplicationResponse apply(Authentication auth, @PathVariable Long roomId) {
+        return applicationService.apply(auth.getName(), roomId);
     }
 
-    @PostMapping("/room/{roomId}/applicant/{userId}")
-    public ResponseEntity<Application> applyToRoom(@PathVariable Long roomId, @PathVariable Long userId) {
-        var room = roomRepository.findById(roomId).orElseThrow();
-        var applicant = userRepository.findById(userId).orElseThrow();
-
-        Application app = Application.builder()
-                .room(room)
-                .applicant(applicant)
-                .status("PENDING")
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        return ResponseEntity.ok(applicationRepository.save(app));
+    @GetMapping("/rooms/{roomId}/applications")
+    @PreAuthorize("hasRole('HOST')")
+    public List<ApplicationResponse> listByRoom(Authentication auth, @PathVariable Long roomId) {
+        return applicationService.listByRoom(auth.getName(), roomId);
     }
 
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<Application> updateStatus(@PathVariable Long id, @RequestParam String status) {
-        Application app = applicationRepository.findById(id).orElseThrow();
-        app.setStatus(status.toUpperCase());
-        return ResponseEntity.ok(applicationRepository.save(app));
+    @PatchMapping("/applications/{id}/status")
+    @PreAuthorize("hasRole('HOST')")
+    public ApplicationResponse changeStatus(Authentication auth, @PathVariable Long id,
+                                            @Valid @RequestBody ApplicationStatusRequest req) {
+        return applicationService.changeStatus(auth.getName(), id, req.status());
     }
 }
