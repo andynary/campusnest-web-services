@@ -19,3 +19,28 @@ Base URL: `http://localhost:8081`. En los endpoints protegidos: pestaña **Autho
 11. **Dueño ajeno** — otro HOST intenta `PATCH /api/rooms/1/status` → **403**.
 
 Guardar la colección (Export) en esta carpeta `docs/` como evidencia.
+
+---
+## Pruebas de US 10, US 01, US 07 y US 11
+
+Usa el token del HOST (Camila) o del SEEKER (María) según se indique. Si cambiaste el modelo, ejecuta antes `sql/truncate.sql`
+(incluye las tablas nuevas) y vuelve a registrar los usuarios.
+
+**US 10 - Servicios**
+1. `GET /api/services` (cualquier token) -> **200** con Agua, Luz, Internet, Gas, Limpieza, Cable.
+2. `PUT /api/rooms/1/services` (HOST) con `{"serviceIds":[1,2,3]}` -> **200**; la respuesta lista `"services":["Agua","Luz","Internet"]`.
+3. Mismo PUT con `{"serviceIds":[999]}` -> **404**. Con token del SEEKER -> **403**.
+
+**US 01 - Búsqueda**
+4. `GET /api/rooms/search?district=San Miguel&maxPrice=700&cleanlinessLevel=4&noiseLevel=2` -> **200** con `compatibilityScore`.
+5. `GET /api/rooms/search?maxPrice=50` -> **400** (presupuesto debe ser mayor a S/ 100).
+
+**US 07 - Postulaciones**
+6. `POST /api/rooms/1/applications` (SEEKER, sin body) -> **201**, estado `PENDING`. Repetirlo -> **409**. Con token HOST -> **403**.
+7. `GET /api/rooms/1/applications` (HOST) -> **200**: panel con universidad, limpieza, ruido, horario y rutina. Con token SEEKER -> **403**.
+8. `PATCH /api/applications/1/status` (HOST) `{"status":"ACCEPTED"}` -> **200**. Repetirlo -> **409** (ya resuelta). `{"status":"banana"}` -> **400**.
+9. La respuesta **no** debe contener `password` en ningun caso.
+
+**US 11 - Visitas**
+10. `POST /api/rooms/1/visits` (SEEKER) `{"visitDateTime":"2026-10-20T16:00:00"}` -> **201**, estado `PROPOSED`. Fecha pasada -> **400**.
+11. `PATCH /api/visits/1/status` (HOST) `{"status":"APPROVED"}` -> **200**. Aprobar otra visita en el mismo horario -> **409**.
