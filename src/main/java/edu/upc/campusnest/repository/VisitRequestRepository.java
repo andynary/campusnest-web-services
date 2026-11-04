@@ -9,4 +9,5 @@ import java.util.List;
 public interface VisitRequestRepository extends JpaRepository<VisitRequest, Long> {
     List<VisitRequest> findByRoomId(Long roomId);
     boolean existsByRoomIdAndVisitDateTimeAndStatus(Long roomId, LocalDateTime visitDateTime, VisitStatus status);
+    List<VisitRequest> findByVisitorEmail(String email);
 }

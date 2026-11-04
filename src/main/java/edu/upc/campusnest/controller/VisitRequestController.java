@@ -33,6 +33,12 @@ public class VisitRequestController {
         return visitService.listByRoom(auth.getName(), roomId);
     }
 
+    @GetMapping("/visits/mine")
+    @PreAuthorize("hasRole('SEEKER')")
+    public List<VisitResponse> mine(Authentication auth) {
+        return visitService.listMine(auth.getName());
+    }
+
     @PatchMapping("/visits/{id}/status")
     @PreAuthorize("hasRole('HOST')")
     public VisitResponse changeStatus(Authentication auth, @PathVariable Long id,

@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
-/** Habitacion independiente de una propiedad, con precio, estado y servicios propios (US 03 y US 10). */
+/** Habitacion independiente de una propiedad, con precio y estado propios (US 03). */
 @Entity @Table(name = "rooms")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Room {
@@ -32,7 +32,7 @@ public class Room {
     @Enumerated(EnumType.STRING) @Column(nullable = false)
     private RoomStatus status;
 
-    /** US 10: servicios incluidos en el alquiler (agua, luz, internet...). */
+    /** Servicios incluidos en el precio (US 10). */
     @ManyToMany
     @JoinTable(name = "room_services",
             joinColumns = @JoinColumn(name = "room_id"),
