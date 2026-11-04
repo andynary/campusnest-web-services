@@ -31,6 +31,12 @@ public class ApplicationController {
         return applicationService.listByRoom(auth.getName(), roomId);
     }
 
+    @GetMapping("/applications/mine")
+    @PreAuthorize("hasRole('SEEKER')")
+    public List<ApplicationResponse> mine(Authentication auth) {
+        return applicationService.listMine(auth.getName());
+    }
+
     @PatchMapping("/applications/{id}/status")
     @PreAuthorize("hasRole('HOST')")
     public ApplicationResponse changeStatus(Authentication auth, @PathVariable Long id,

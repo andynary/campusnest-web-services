@@ -66,6 +66,12 @@ public class ApplicationService {
         return toResponse(applicationRepository.save(app));
     }
 
+    /** El estudiante buscador ve sus propias postulaciones (identidad desde el token). */
+    @Transactional(readOnly = true)
+    public List<ApplicationResponse> listMine(String applicantEmail) {
+        return applicationRepository.findByApplicantEmail(applicantEmail).stream().map(this::toResponse).toList();
+    }
+
     private Room findRoom(Long roomId) {
         return roomRepository.findById(roomId)
                 .orElseThrow(() -> new ResourceNotFoundException("Habitacion no encontrada"));

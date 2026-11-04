@@ -9,7 +9,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import java.util.List;
 
-/** Carga inicial de catalogos (distritos del Capitulo I y servicios incluidos de US 10) si estan vacios. */
+/** Carga inicial del catalogo de distritos (los del Capitulo I) si la tabla esta vacia. */
 @Component
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
@@ -23,8 +23,9 @@ public class DataInitializer implements CommandLineRunner {
                     "Los Olivos", "La Molina", "Cercado de Lima", "Brena", "San Martin de Porres")
                 .forEach(n -> districtRepository.save(District.builder().name(n).build()));
         }
+
         if (serviceRepository.count() == 0) {
-            List.of("Agua", "Luz", "Internet", "Gas", "Limpieza", "Cable")
+            List.of("Agua", "Luz", "Internet", "Gas", "Limpieza", "Lavanderia", "Cable")
                 .forEach(n -> serviceRepository.save(IncludedService.builder().name(n).build()));
         }
     }

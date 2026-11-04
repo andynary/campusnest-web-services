@@ -47,10 +47,9 @@ public class PropertyController {
         return propertyService.changeRoomStatus(auth.getName(), roomId, req);
     }
 
-    /** US 10: asocia servicios incluidos (agua, luz, internet...) a una habitacion. */
     @PutMapping("/rooms/{roomId}/services")
-    public RoomResponse updateServices(Authentication auth, @PathVariable Long roomId,
-                                       @Valid @RequestBody RoomServicesRequest req) {
-        return propertyService.updateRoomServices(auth.getName(), roomId, req);
+    public RoomResponse setServices(Authentication auth, @PathVariable Long roomId,
+                                    @Valid @RequestBody RoomServicesRequest req) {
+        return propertyService.setRoomServices(auth.getName(), roomId, req);
     }
 }

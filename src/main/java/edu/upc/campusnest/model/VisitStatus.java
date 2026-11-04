@@ -1,3 +1,5 @@
 package edu.upc.campusnest.model;
 
-public enum VisitStatus { PROPOSED, APPROVED, REJECTED }
+public enum VisitStatus {
+    PROPOSED, APPROVED, REJECTED
+}

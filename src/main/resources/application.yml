@@ -25,3 +25,8 @@ jwt:
 # US 09: dominios de correo universitario aceptados (editar según el equipo).
 app:
   institutional-domains: upc.edu.pe,pucp.edu.pe,uni.pe,unmsm.edu.pe,ulima.edu.pe,up.edu.pe,usil.edu.pe,usmp.pe,utp.edu.pe
+
+# US 01: linea base de convivencia ideal (escala 1-5) contra la que se calcula el % de compatibilidad.
+  match:
+    ideal-cleanliness: 4
+    ideal-noise: 2

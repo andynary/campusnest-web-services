@@ -60,6 +60,12 @@ public class VisitService {
         return toResponse(visitRepository.save(visit));
     }
 
+    /** El estudiante buscador ve sus propias visitas (identidad desde el token). */
+    @Transactional(readOnly = true)
+    public List<VisitResponse> listMine(String visitorEmail) {
+        return visitRepository.findByVisitorEmail(visitorEmail).stream().map(this::toResponse).toList();
+    }
+
     private Room findRoom(Long roomId) {
         return roomRepository.findById(roomId)
                 .orElseThrow(() -> new ResourceNotFoundException("Habitacion no encontrada"));

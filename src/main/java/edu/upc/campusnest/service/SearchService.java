@@ -1,83 +1,56 @@
 package edu.upc.campusnest.service;
 
-import edu.upc.campusnest.dto.response.RoomSearchResponse;
-import edu.upc.campusnest.model.Room;
+import edu.upc.campusnest.dto.response.RoomResponse;
+import edu.upc.campusnest.mapper.RoomMapper;
 import edu.upc.campusnest.model.RoomStatus;
-import edu.upc.campusnest.model.StudentProfile;
 import edu.upc.campusnest.repository.RoomRepository;
-import edu.upc.campusnest.repository.StudentProfileRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.math.BigDecimal;
 import java.util.List;
-import java.util.stream.Collectors;
 
+/**
+ * US 01: busqueda de habitaciones disponibles + porcentaje de compatibilidad (regla de la demo).
+ * El porcentaje compara los habitos del estudiante (limpieza y ruido, escala 1-5) contra una
+ * linea base de convivencia ideal, igual para todas las habitaciones. Valores en application.yml.
+ */
 @Service
 @RequiredArgsConstructor
 public class SearchService {
 
     private final RoomRepository roomRepository;
-    private final StudentProfileRepository studentProfileRepository;
+    private final RoomMapper roomMapper;
+
+    @Value("${app.match.ideal-cleanliness:4}")
+    private int idealCleanliness;
+
+    @Value("${app.match.ideal-noise:2}")
+    private int idealNoise;
 
     @Transactional(readOnly = true)
-    public List<RoomSearchResponse> searchRooms(String district, BigDecimal maxPrice, Integer userCleanliness, Integer userNoise) {
-        // Criterio de aceptacion US 01: presupuesto valido mayor a S/ 100
-        if (maxPrice != null && maxPrice.compareTo(new BigDecimal("100")) <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Por favor, ingrese un presupuesto de alquiler válido mayor a S/ 100");
-        }
-
-        List<Room> rooms = roomRepository.findAll();
-
-        return rooms.stream()
-                .filter(r -> r.getStatus() == RoomStatus.AVAILABLE)
-                .filter(r -> district == null || district.isBlank() || 
-                        (r.getProperty().getDistrict() != null && r.getProperty().getDistrict().getName().equalsIgnoreCase(district.trim())))
-                .filter(r -> maxPrice == null || r.getMonthlyPrice().compareTo(maxPrice) <= 0)
-                .map(room -> {
-                    int score = calculateCompatibility(room, userCleanliness, userNoise);
-                    return RoomSearchResponse.builder()
-                            .id(room.getId())
-                            .propertyId(room.getProperty().getId())
-                            .name(room.getName())
-                            .description(room.getDescription())
-                            .monthlyPrice(room.getMonthlyPrice())
-                            .furnished(room.isFurnished())
-                            .privateBathroom(room.isPrivateBathroom())
-                            .status(room.getStatus())
-                            .district(room.getProperty().getDistrict() != null ? room.getProperty().getDistrict().getName() : "")
-                            .compatibilityScore(score)
-                            .build();
-                })
-                .collect(Collectors.toList());
+    public List<RoomResponse> searchRooms(Integer cleanlinessLevel, Integer noiseLevel) {
+        int score = score(cleanlinessLevel, noiseLevel, idealCleanliness, idealNoise);
+        return roomRepository.findAll().stream()
+                .filter(room -> room.getStatus() == RoomStatus.AVAILABLE)
+                .map(roomMapper::toResponse)
+                .map(r -> new RoomResponse(r.id(), r.propertyId(), r.name(), r.description(),
+                        r.monthlyPrice(), r.furnished(), r.privateBathroom(), r.status(),
+                        r.services(), r.district(), score))
+                .toList();
     }
 
-    private int calculateCompatibility(Room room, Integer userCleanliness, Integer userNoise) {
-        if (userCleanliness == null && userNoise == null) {
-            return 80; // Valor base neutral
-        }
-
-        // Obtener el perfil del anfitrion (owner de la propiedad)
-        StudentProfile hostProfile = studentProfileRepository.findByUserId(room.getProperty().getOwner().getId()).orElse(null);
-
-        if (hostProfile == null) {
-            return 80;
-        }
-
-        int targetClean = userCleanliness != null ? userCleanliness : 3;
-        int targetNoise = userNoise != null ? userNoise : 3;
-
-        int hostClean = hostProfile.getCleanlinessLevel() != null ? hostProfile.getCleanlinessLevel() : 3;
-        int hostNoise = hostProfile.getNoiseLevel() != null ? hostProfile.getNoiseLevel() : 3;
-
-        int diffClean = Math.abs(hostClean - targetClean);
-        int diffNoise = Math.abs(hostNoise - targetNoise);
-
-        // Algoritmo de ponderacion: 100% menos diferencia de habitos
-        int score = 100 - ((diffClean + diffNoise) * 10);
-        return Math.max(score, 50);
+    /**
+     * 100% = coincide con la linea base; 0% = maxima diferencia posible (4 puntos por dimension).
+     * Si el estudiante no tiene un nivel, se usa 3 (neutro). Los niveles se limitan a 1..5.
+     */
+    static int score(Integer cleanliness, Integer noise, int idealCleanliness, int idealNoise) {
+        int c = clamp(cleanliness == null ? 3 : cleanliness);
+        int n = clamp(noise == null ? 3 : noise);
+        int diff = Math.abs(c - idealCleanliness) + Math.abs(n - idealNoise);
+        return (int) Math.round(100.0 * (1 - diff / 8.0));
     }
+
+    private static int clamp(int v) { return Math.max(1, Math.min(5, v)); }
 }
