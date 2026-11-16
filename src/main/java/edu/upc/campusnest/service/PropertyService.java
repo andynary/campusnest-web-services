@@ -6,6 +6,7 @@ import edu.upc.campusnest.dto.request.RoomServicesRequest;
 import edu.upc.campusnest.dto.request.RoomStatusRequest;
 import edu.upc.campusnest.dto.response.PropertyResponse;
 import edu.upc.campusnest.dto.response.RoomResponse;
+import edu.upc.campusnest.exception.BusinessRuleException;
 import edu.upc.campusnest.exception.ResourceNotFoundException;
 import edu.upc.campusnest.mapper.PropertyMapper;
 import edu.upc.campusnest.mapper.RoomMapper;
@@ -68,6 +69,25 @@ public class PropertyService {
             throw new AccessDeniedException("La habitacion no te pertenece");   // 403
         }
         room.setStatus(req.status());
+        return roomMapper.toResponse(roomRepository.save(room));
+    }
+
+    /**
+     * US 24: marca UNA habitacion como ocupada (solo el duenio). Si ya estaba ocupada avisa con una
+     * regla de negocio (409) en vez de repetir el cambio. La habitacion sale de la busqueda publica
+     * porque SearchService solo muestra las AVAILABLE.
+     */
+    @Transactional
+    public RoomResponse markRoomOccupied(String ownerEmail, Long roomId) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new ResourceNotFoundException("Habitacion no encontrada"));
+        if (!room.getProperty().getOwner().getEmail().equals(ownerEmail)) {
+            throw new AccessDeniedException("La habitacion no te pertenece");   // 403
+        }
+        if (room.getStatus() == RoomStatus.OCCUPIED) {
+            throw new BusinessRuleException("La habitacion ya figuraba como ocupada");
+        }
+        room.setStatus(RoomStatus.OCCUPIED);
         return roomMapper.toResponse(roomRepository.save(room));
     }
 
