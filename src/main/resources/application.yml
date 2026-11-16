@@ -4,6 +4,23 @@ server:
 spring:
   application:
     name: campusnest
+  # Lee las claves privadas del archivo .env (NO se sube a GitHub; ver .env.example)
+  config:
+    import: optional:file:.env[.properties]
+  # US 24+: agente de IA (Spring AI). Groq expone una API compatible con OpenAI.
+  ai:
+    openai:
+      api-key: ${GROQ_API_KEY:no-configurada}
+      base-url: https://api.groq.com/openai
+      chat:
+        options:
+          model: openai/gpt-oss-120b
+          temperature: 0.2
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: always   # crea la tabla de memoria si no existe
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/campusnest}
     username: ${DB_USER:postgres}
